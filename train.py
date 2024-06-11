@@ -22,7 +22,7 @@ parser.add_argument('--gpu', type=str, default="0", help='which gpu is used')
 parser.add_argument('--bs', type=int, default=32, help='batch size')
 parser.add_argument('--T', type=int, default=1000, help='T')
 parser.add_argument('--epoch', type=int, default=2000, help='all_epochs')
-parser.add_argument("--local_rank", default=-1, type=int)
+parser.add_argument("--local-rank", default=-1, type=int)
 args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
 
@@ -55,8 +55,10 @@ train_data = Dataset_PSDM_train(data_root=data_root_train)
 train_samper = Data.distributed.DistributedSampler(train_data)
 val_data = Dataset_PSDM_val(data_root=data_root_val)
 val_samper = Data.distributed.DistributedSampler(val_data)
-train_dataloader = DataLoader(dataset=train_data, batch_size=train_bs, sampler=train_samper, shuffle=False, num_workers=4, pin_memory=True)
-val_dataloader = DataLoader(dataset=val_data, batch_size=val_bs, sampler=val_samper, shuffle=False, num_workers=4, pin_memory=True)
+train_dataloader = DataLoader(dataset=train_data, batch_size=train_bs, sampler=train_samper, shuffle=False,
+                              num_workers=4, pin_memory=True)
+val_dataloader = DataLoader(dataset=val_data, batch_size=val_bs, sampler=val_samper, shuffle=False, num_workers=4,
+                            pin_memory=True)
 
 if dist.get_rank() == 0:
     print('train_lenth: %i   val_lenth: %i' % (train_data.len, val_data.len))
@@ -64,13 +66,13 @@ if dist.get_rank() == 0:
 dis_channels = 20
 
 model = UNetModel_MS_Former(image_size=img_size, in_channels=1, ct_channels=1, dis_channels=dis_channels,
-                       model_channels=128, out_channels=1, num_res_blocks=2, attention_resolutions=(16, 32),
-                       dropout=0,
-                       channel_mult=(1, 1, 2, 3, 4), conv_resample=True, dims=2, num_classes=None,
-                       use_checkpoint=False,
-                       use_fp16=False, num_heads=4, num_head_channels=-1, num_heads_upsample=-1,
-                       use_scale_shift_norm=True,
-                       resblock_updown=False, use_new_attention_order=False)
+                            model_channels=128, out_channels=1, num_res_blocks=2, attention_resolutions=(16, 32),
+                            dropout=0,
+                            channel_mult=(1, 1, 2, 3, 4), conv_resample=True, dims=2, num_classes=None,
+                            use_checkpoint=False,
+                            use_fp16=False, num_heads=4, num_head_channels=-1, num_heads_upsample=-1,
+                            use_scale_shift_norm=True,
+                            resblock_updown=False, use_new_attention_order=False)
 
 diffusion = SpacedDiffusion(use_timesteps=space_timesteps(args.T, [args.T]),
                             betas=gd.get_named_beta_schedule("linear", args.T),
@@ -79,10 +81,10 @@ diffusion = SpacedDiffusion(use_timesteps=space_timesteps(args.T, [args.T]),
                             loss_type=gd.LossType.MSE, rescale_timesteps=False)
 
 diffusion_test = SpacedDiffusion(use_timesteps=space_timesteps(args.T, 'ddim4'),
-                                betas=gd.get_named_beta_schedule("linear", args.T),
-                                model_mean_type=(gd.ModelMeanType.EPSILON),
-                                model_var_type=(gd.ModelVarType.FIXED_LARGE),
-                                loss_type=gd.LossType.MSE, rescale_timesteps=False)
+                                 betas=gd.get_named_beta_schedule("linear", args.T),
+                                 model_mean_type=(gd.ModelMeanType.EPSILON),
+                                 model_var_type=(gd.ModelVarType.FIXED_LARGE),
+                                 loss_type=gd.LossType.MSE, rescale_timesteps=False)
 
 model.cuda()
 model = DDP(model, device_ids=[args.local_rank], output_device=args.local_rank, broadcast_buffers=False,
@@ -102,7 +104,8 @@ for epoch in range(all_epochs):
 
         optimizer.zero_grad()
         t, weights = schedule_sampler.sample(rtdose.shape[0], rtdose.device)
-        losses = diffusion.training_losses(model=model, x_start=rtdose, t=t, model_kwargs={'ct': ct, 'dis': dis}, noise=None)
+        losses = diffusion.training_losses(model=model, x_start=rtdose, t=t, model_kwargs={'ct': ct, 'dis': dis},
+                                           noise=None)
         loss = (losses["loss"] * weights).mean()
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
@@ -113,8 +116,9 @@ for epoch in range(all_epochs):
 
         train_epoch_loss.append(loss.item())
         if dist.get_rank() == 0:
-            print('[%d/%d, %d/%d] train_loss: %.3f' %
-                  (epoch + 1, all_epochs, i + 1, len(train_dataloader), loss.item()))
+            if (i + 1) % 10 == 0:
+                print('[%d/%d, %d/%d] train_loss: %.5f' % (
+                epoch + 1, all_epochs, i + 1, len(train_dataloader), loss.item()))
     lr_scheduler.step()
 
     if dist.get_rank() == 0:
@@ -134,7 +138,8 @@ for epoch in range(all_epochs):
 
                 pred = diffusion_test.ddim_sample_loop(
                     model=model, shape=(ct.size(0), 1, img_size[0], img_size[1]), noise=None, clip_denoised=True,
-                    denoised_fn=None, cond_fn=None, model_kwargs={'ct': ct, 'dis': dis}, device=None, progress=False, eta=0.0)
+                    denoised_fn=None, cond_fn=None, model_kwargs={'ct': ct, 'dis': dis}, device=None, progress=False,
+                    eta=0.0)
 
                 rtdose = (rtdose + 1) * 40
                 pred = (pred + 1) * 40

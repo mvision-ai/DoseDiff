@@ -43,13 +43,13 @@ diffusion = SpacedDiffusion(use_timesteps=space_timesteps(args.T, 'ddim{}'.forma
                             loss_type=gd.LossType.MSE, rescale_timesteps=False)
 
 net = UNetModel_MS_Former(image_size=img_size, in_channels=1, ct_channels=1, dis_channels=dis_channels,
-                       model_channels=128, out_channels=1, num_res_blocks=2, attention_resolutions=(16, 32),
-                       dropout=0,
-                       channel_mult=(1, 1, 2, 3, 4), conv_resample=True, dims=2, num_classes=None,
-                       use_checkpoint=False,
-                       use_fp16=False, num_heads=4, num_head_channels=-1, num_heads_upsample=-1,
-                       use_scale_shift_norm=True,
-                       resblock_updown=False, use_new_attention_order=False)
+                          model_channels=128, out_channels=1, num_res_blocks=2, attention_resolutions=(16, 32),
+                          dropout=0,
+                          channel_mult=(1, 1, 2, 3, 4), conv_resample=True, dims=2, num_classes=None,
+                          use_checkpoint=False,
+                          use_fp16=False, num_heads=4, num_head_channels=-1, num_heads_upsample=-1,
+                          use_scale_shift_norm=True,
+                          resblock_updown=False, use_new_attention_order=False)
 net.cuda()
 checkpoint = torch.load(args.model_path)
 net.load_state_dict({k.replace('module.', ''): v for k, v in checkpoint.items()})
@@ -158,7 +158,7 @@ with torch.no_grad():
                     dis_one_tensor_TTA = torch.flip(dis_one_tensor, dims=[2, 3]).cuda()
                 noise = None
                 pred_rtdose_one = diffusion.ddim_sample_loop(net, (
-                CT_one_tensor_TTA.size(0), 1, img_size[0], img_size[1]),
+                    CT_one_tensor_TTA.size(0), 1, img_size[0], img_size[1]),
                                                              model_kwargs={'ct': CT_one_tensor_TTA,
                                                                            'dis': dis_one_tensor_TTA},
                                                              noise=noise, clip_denoised=True, eta=0.0,
@@ -183,8 +183,9 @@ with torch.no_grad():
         NiiDataWrite(os.path.join(new_dir, 'predictions', ID, 'dose.nii.gz'),
                      pred_rtdose, spacing, origin, direction)
 
-Dose_score, Dose_std, DVH_score, DVH_std = get_Dose_score_and_DVH_score(prediction_dir=os.path.join(new_dir, 'predictions'),
-                                                     gt_dir=r'preprocessed_data/test-pats')
+Dose_score, Dose_std, DVH_score, DVH_std = get_Dose_score_and_DVH_score(
+    prediction_dir=os.path.join(new_dir, 'predictions'),
+    gt_dir=r'preprocessed_data/test-pats')
 print('Dose_score: {}'.format(Dose_score))
 print('DVH_score: {}'.format(DVH_score))
 

@@ -13,8 +13,8 @@ class Dataset_PSDM_train(Dataset):
         self.file_name_list.extend(os.listdir(os.path.join(data_root, 'ct')))
 
         self.transforms = Compose([
-            ShiftScaleRotate(shift_limit=0.1, scale_limit=0.1, rotate_limit=90, p=0.3, value=None,
-                             mask_value=None, border_mode=cv2.BORDER_REPLICATE, interpolation=cv2.INTER_NEAREST),
+            ShiftScaleRotate(shift_limit=0.1, scale_limit=0.1, rotate_limit=90, p=0.3, value=0,
+                             mask_value=0, border_mode=cv2.BORDER_REPLICATE, interpolation=cv2.INTER_NEAREST),
             HorizontalFlip(p=0.3), VerticalFlip(p=0.3)], p=0.8)
         self.len = len(self.file_name_list)
 

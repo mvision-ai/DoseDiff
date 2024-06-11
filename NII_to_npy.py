@@ -6,9 +6,10 @@ original_dir = r'preprocessed_data'
 save_dir = r'preprocessed_data/NPY'
 
 name_list = ['ct',  'dose', 'Mask_Brainstem', 'Mask_Esophagus', 'Mask_Larynx', 'Mask_LeftParotid', 'Mask_Mandible',
-             'Mask_possible_dose_mask', 'Mask_PTV56', 'Mask_PTV63', 'Mask_PTV70', 'Mask_RightParotid', 'Mask_SpinalCord',
-             'PSDM_Brainstem', 'PSDM_Esophagus', 'PSDM_Larynx', 'PSDM_LeftParotid', 'PSDM_Mandible', 'PSDM_possible_dose_mask',
-             'PSDM_PTV56', 'PSDM_PTV63', 'PSDM_PTV70', 'PSDM_RightParotid', 'PSDM_SpinalCord']
+             'Mask_possible_dose_mask', 'Mask_PTV56', 'Mask_PTV63', 'Mask_PTV70', 'Mask_RightParotid',
+             'Mask_SpinalCord', 'PSDM_Brainstem', 'PSDM_Esophagus', 'PSDM_Larynx', 'PSDM_LeftParotid', 'PSDM_Mandible',
+             'PSDM_possible_dose_mask', 'PSDM_PTV56', 'PSDM_PTV63', 'PSDM_PTV70', 'PSDM_RightParotid',
+             'PSDM_SpinalCord']
 
 for phase in ['train', 'validation', 'test']:
     for name in name_list:
